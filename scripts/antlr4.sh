@@ -1,6 +1,10 @@
-#!/usr/bin/env sh
+#!/bin/zsh
 
 set -o errexit
+
+echo $CLASSPATH
+
+alias antlr4='java -Xmx500M -cp "/home/zqz/Documents/contest/solidity-parser-antlr/solidity-antlr4/antlr4.jar:$CLASSPATH" org.antlr.v4.Tool'
 
 antlr4 -Dlanguage=JavaScript solidity-antlr4/Solidity.g4 -o lib
 
