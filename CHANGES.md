@@ -1,5 +1,13 @@
 ### Unreleased
 
+ * Add support for `address payable` typename.
+
+### 0.3.2
+
+ * Fix parsing of hex numbers with uppercase X.
+
+### 0.3.1
+
  * Fix parsing of zero-component tuples.
 
 ### 0.3.0
