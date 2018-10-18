@@ -176,13 +176,13 @@ const transformAST = {
 
     return {
       name,
-      parameters,
-      returnParameters,
-      body: block,
-      visibility,
-      modifiers,
       isConstructor: name === this._currentContract,
-      stateMutability
+      parameters,
+      visibility,
+      stateMutability,
+      modifiers,
+      returnParameters,
+      body: block
     }
   },
 
@@ -684,13 +684,19 @@ const transformAST = {
   },
 
   ForStatement(ctx) {
+    // return {
+    //   initExpression: this.visit(ctx.simpleStatement()),
+    //   conditionExpression: this.visit(ctx.expression(0)),
+    //   loopExpression: {
+    //     type: 'ExpressionStatement',
+    //     expression: this.visit(ctx.expression(1))
+    //   },
+    //   body: this.visit(ctx.statement())
+    // }
     return {
       initExpression: this.visit(ctx.simpleStatement()),
       conditionExpression: this.visit(ctx.expression(0)),
-      loopExpression: {
-        type: 'ExpressionStatement',
-        expression: this.visit(ctx.expression(1))
-      },
+      loopExpression: this.visit(ctx.expression(1)),
       body: this.visit(ctx.statement())
     }
   },
