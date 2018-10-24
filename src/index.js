@@ -6,6 +6,8 @@ const ErrorListener = require('./ErrorListener')
 const { buildTokenList } = require('./tokens')
 const hash = require('json-hash');
 
+let elementId = 0;
+
 function ParserError(args) {
   this.message = args.errors[0].message
   this.errors = args.errors
@@ -74,6 +76,8 @@ function parse(input, options) {
     ast.tokens = tokenList
   }
 
+  // visit the ast to add "depth" and "id"
+  visit(ast, {}, true, true);
   return ast
 }
 
@@ -81,52 +85,54 @@ function _isASTNode(node) {
   return !!node && typeof node === 'object' && node.hasOwnProperty('type')
 }
 
-function visit(node, visitor, depth=0) {
-  if (_isASTNode(node)) {
-    node.depth = depth;
-    // if (!node.random) {
-    //   let random = hash.digest(node);
-    //   node.random = random;
-    // }
+function visit(node, visitor, depthf=false, idf=false) {
+  let id = 0;
+  let subVisit = (node, visitor, depth) => {
+    if (_isASTNode(node)) {
+      if (depthf) node.depth = depth;
+      if (idf) {
+        node.id = id;
+        id += 1;
+      }
 
-    let cont = true
+      let cont = true
 
-    if (visitor['PrevAll']) {
-      cont = visitor['PrevAll'](node)
-    }
+      if (visitor['PrevAll']) {
+        cont = visitor['PrevAll'](node)
+      }
 
-    if (visitor[node.type]) {
-      cont = visitor[node.type](node)
-    }
+      if (visitor[node.type]) {
+        cont = visitor[node.type](node)
+      }
 
-    if (visitor['PostAll']) {
-      cont = visitor['PostAll'](node)
-    }
+      if (visitor['PostAll']) {
+        cont = visitor['PostAll'](node)
+      }
 
-    if (visitor['all']) {
-      cont = visitor['all'](node)
-    }
+      if (visitor['all']) {
+        cont = visitor['all'](node)
+      }
 
-    if (cont === false) return
+      if (cont === false) return
 
-    for (const prop in node) {
-      if (node.hasOwnProperty(prop)) {
-        visit(node[prop], visitor, depth+1)
+      for (const prop in node) {
+        if (node.hasOwnProperty(prop)) {
+          subVisit(node[prop], visitor, depth+1);
+        }
+      }
+
+      const selector = node.type + ':exit'
+      if (visitor[selector]) {
+        visitor[selector](node)
+      }
+    } else if (Array.isArray(node)) {
+      for(var i in node) {
+        subVisit(node[i], visitor, depth)
       }
     }
-
-    const selector = node.type + ':exit'
-    if (visitor[selector]) {
-      visitor[selector](node)
-    }
-  } else if (Array.isArray(node)) {
-    // node.forEach(child => {
-    //   visit(child, visitor)
-    // })
-    for(var i in node) {
-      visit(node[i], visitor, depth)
-    }
   }
+  // run
+  subVisit(node, visitor, 0);
 }
 
 function graph(node) {
